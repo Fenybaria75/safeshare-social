@@ -1,16 +1,146 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { Shield, Instagram } from "lucide-react";
+import { usePosts } from "@/hooks/usePosts";
+import { useProfiles } from "@/hooks/useProfiles";
+import { PostCard } from "@/components/PostCard";
+import { UserSwitcher } from "@/components/UserSwitcher";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Profile } from "@/types";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const { data: posts, isLoading: postsLoading } = usePosts();
+  const { data: profiles, isLoading: profilesLoading } = useProfiles();
+  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
+
+  // Set default user once loaded
+  if (profiles && !currentUser) {
+    setCurrentUser(profiles[0]);
+  }
+
+  const isLoading = postsLoading || profilesLoading;
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 h-14">
+          <div className="flex items-center gap-2">
+            <Instagram className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-bold gradient-text">SafeGram</h1>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
+            <Shield className="h-3.5 w-3.5 text-primary" />
+            <span>AI Moderation Active</span>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-5xl mx-auto px-4 py-6 flex gap-8">
+        {/* Sidebar */}
+        <aside className="hidden md:block w-64 shrink-0">
+          <div className="sticky top-20 space-y-6">
+            {/* Current user info */}
+            {currentUser && (
+              <div className="bg-card rounded-xl border border-border p-4 text-center space-y-2">
+                <img
+                  src={currentUser.avatar_url || ""}
+                  alt={currentUser.username}
+                  className="w-16 h-16 rounded-full mx-auto ring-2 ring-primary/30 object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-sm">{currentUser.display_name}</p>
+                  <p className="text-xs text-muted-foreground">@{currentUser.username}</p>
+                </div>
+                {currentUser.bio && (
+                  <p className="text-xs text-muted-foreground">{currentUser.bio}</p>
+                )}
+              </div>
+            )}
+
+            {/* User switcher */}
+            {profiles && currentUser && (
+              <div className="bg-card rounded-xl border border-border p-4">
+                <UserSwitcher
+                  profiles={profiles}
+                  currentUser={currentUser}
+                  onSwitch={setCurrentUser}
+                />
+              </div>
+            )}
+
+            {/* Moderation info */}
+            <div className="bg-card rounded-xl border border-border p-4 space-y-2">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold">AI Moderation</p>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Comments are analyzed in real-time by AI to detect cyberbullying, hate speech, 
+                and abusive content. Harmful comments are automatically hidden. 
+                Supports multiple languages and emoji detection.
+              </p>
+            </div>
+          </div>
+        </aside>
+
+        {/* Feed */}
+        <main className="flex-1 max-w-lg mx-auto space-y-6">
+          {/* Mobile user switcher */}
+          {profiles && currentUser && (
+            <div className="md:hidden bg-card rounded-xl border border-border p-3">
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {profiles.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setCurrentUser(p)}
+                    className={`flex flex-col items-center gap-1 shrink-0 ${
+                      p.id === currentUser.id ? "opacity-100" : "opacity-50"
+                    }`}
+                  >
+                    <img
+                      src={p.avatar_url || ""}
+                      alt={p.username}
+                      className={`w-12 h-12 rounded-full object-cover ring-2 ${
+                        p.id === currentUser.id ? "ring-primary" : "ring-border"
+                      }`}
+                    />
+                    <span className="text-[10px] text-muted-foreground truncate w-14 text-center">
+                      {p.username}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="bg-card rounded-xl border border-border overflow-hidden">
+                <div className="flex items-center gap-3 p-4">
+                  <Skeleton className="h-9 w-9 rounded-full" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-2.5 w-16" />
+                  </div>
+                </div>
+                <Skeleton className="aspect-square w-full" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-3 w-full" />
+                </div>
+              </div>
+            ))
+          ) : (
+            posts?.map((post) =>
+              currentUser ? (
+                <PostCard key={post.id} post={post} currentUser={currentUser} />
+              ) : null
+            )
+          )}
+        </main>
+      </div>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
