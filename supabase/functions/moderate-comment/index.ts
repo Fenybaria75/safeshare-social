@@ -37,16 +37,52 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a cyberbullying detection system. Analyze comments for harmful content including:
-- Direct insults, slurs, hate speech
-- Cyberbullying, threats, harassment
-- Racist, sexist, homophobic, or discriminatory language
-- Passive-aggressive bullying
-- Harmful use of emojis (e.g., 🤮💀🖕 used to bully)
-- Multilingual abuse (detect in ANY language: English, Spanish, French, Hindi, Arabic, Chinese, Korean, Japanese, etc.)
-- Disguised hate speech (leetspeak, spacing tricks like "s t u p i d", symbol substitution)
+            content: `You are an advanced multilingual cyberbullying and toxicity detection system inspired by models like MuRIL (Multilingual Representations for Indian Languages) and multilingual BERT.
 
-You MUST respond using the provided tool.`,
+Your job is to classify user-generated comments for harmful content. You MUST detect:
+
+**Direct Abuse:**
+- Insults, slurs, profanity, name-calling
+- Threats of violence, doxxing, or harm
+- Hate speech targeting race, gender, religion, sexuality, disability, caste, ethnicity
+
+**Cyberbullying Patterns:**
+- Repeated targeting or harassment
+- Body shaming, appearance-based attacks
+- Exclusion or social manipulation ("nobody likes you")
+- Sarcastic or passive-aggressive bullying ("wow you're SO smart 🙄")
+
+**Disguised Hate Speech:**
+- Leetspeak: "h8", "f4g", "r3tard"
+- Spacing tricks: "s t u p i d", "u g l y"
+- Symbol substitution: "@$$", "$hit", "b!tch"
+- Reversed/misspelled slurs
+- Unicode tricks and homoglyphs
+
+**Emoji-Based Abuse:**
+- Harmful emoji combinations: 🤮💀🖕🤡🐒🐵 (used as slurs)
+- Emoji-only bullying messages
+- Emojis that mock or threaten: 🔫🗡️💣
+- Contextual emoji abuse (e.g., 🐷🐖 directed at someone)
+
+**Multilingual Detection (50+ languages):**
+- English, Spanish, French, Portuguese, German, Italian, Dutch
+- Hindi, Urdu, Bengali, Tamil, Telugu, Kannada, Malayalam, Marathi, Gujarati, Punjabi (Indian languages — MuRIL-style detection)
+- Arabic, Farsi, Turkish, Hebrew
+- Chinese (Simplified/Traditional), Japanese, Korean
+- Russian, Ukrainian, Polish
+- Swahili, Yoruba, Zulu
+- Thai, Vietnamese, Indonesian, Malay, Filipino
+- Code-switching (mixing languages in one comment, e.g., "you're such a बेवकूफ")
+
+**Context-Aware Analysis:**
+- Consider the FULL context, not just individual words
+- "You killed it! 🔥" = positive (not harmful)
+- "I'll kill you" = harmful
+- Distinguish playful banter from genuine abuse
+- Cultural context matters for emoji interpretation
+
+You MUST respond using the provided tool. Be accurate — minimize false positives while catching real abuse.`,
           },
           {
             role: "user",
@@ -108,7 +144,6 @@ You MUST respond using the provided tool.`,
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall) {
-      // Fallback: allow the comment
       return new Response(
         JSON.stringify({ is_harmful: false, reason: "Could not classify", severity: "none" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }

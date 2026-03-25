@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Shield, ShieldAlert, ChevronDown, ChevronUp } from "lucide-react";
+import { Heart, MessageCircle, Shield, ShieldAlert, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,8 +74,8 @@ export function PostCard({ post, currentUser }: PostCardProps) {
           </button>
           {hiddenComments.length > 0 && (
             <div className="ml-auto flex items-center gap-1.5">
-              <ShieldAlert className="h-4 w-4 text-primary" />
-              <span className="text-xs text-primary font-medium">
+              <ShieldAlert className="h-4 w-4 text-destructive" />
+              <span className="text-xs text-destructive font-medium">
                 {hiddenComments.length} flagged
               </span>
             </div>
@@ -113,15 +113,18 @@ export function PostCard({ post, currentUser }: PostCardProps) {
               <div className="pt-2">
                 <button
                   onClick={() => setShowHidden(!showHidden)}
-                  className="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary transition-colors"
+                  className="flex items-center gap-1.5 text-xs text-destructive/70 hover:text-destructive transition-colors"
                 >
                   <Shield className="h-3 w-3" />
                   {showHidden ? "Hide" : "Show"} {hiddenComments.length} hidden comment{hiddenComments.length !== 1 ? "s" : ""}
                 </button>
-                {showHidden &&
-                  hiddenComments.map((comment) => (
-                    <CommentItem key={comment.id} comment={comment} isHidden />
-                  ))}
+                {showHidden && (
+                  <div className="space-y-2 mt-2">
+                    {hiddenComments.map((comment) => (
+                      <CommentItem key={comment.id} comment={comment} isHidden />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -157,8 +160,45 @@ export function PostCard({ post, currentUser }: PostCardProps) {
 }
 
 function CommentItem({ comment, isHidden }: { comment: Comment; isHidden?: boolean }) {
+  if (isHidden) {
+    return (
+      <div className="border-2 border-destructive rounded-lg bg-destructive/10 p-3 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+          <span className="text-xs font-bold text-destructive uppercase tracking-wide">
+            Flagged by AI Moderation
+          </span>
+        </div>
+        <div className="flex gap-2 text-sm">
+          <Avatar className="h-6 w-6 mt-0.5 shrink-0">
+            <AvatarImage src={comment.profiles?.avatar_url || ""} />
+            <AvatarFallback className="bg-muted text-[9px]">
+              {comment.profiles?.username?.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p>
+              <span className="font-semibold mr-1.5 text-destructive">{comment.profiles?.username}</span>
+              <span className="italic text-destructive/70 line-through">{comment.content}</span>
+            </p>
+            {comment.hidden_reason && (
+              <div className="flex items-center gap-1 mt-1.5">
+                <Badge variant="destructive" className="text-[10px] px-2 py-0.5 font-semibold">
+                  Reason: {comment.hidden_reason}
+                </Badge>
+              </div>
+            )}
+            <p className="text-xs text-destructive/50 mt-1">
+              {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`flex gap-2 text-sm ${isHidden ? "opacity-50 bg-destructive/5 rounded-lg p-2" : ""}`}>
+    <div className="flex gap-2 text-sm">
       <Avatar className="h-6 w-6 mt-0.5 shrink-0">
         <AvatarImage src={comment.profiles?.avatar_url || ""} />
         <AvatarFallback className="bg-muted text-[9px]">
@@ -168,19 +208,8 @@ function CommentItem({ comment, isHidden }: { comment: Comment; isHidden?: boole
       <div className="min-w-0">
         <p>
           <span className="font-semibold mr-1.5">{comment.profiles?.username}</span>
-          {isHidden ? (
-            <span className="italic text-muted-foreground">[Hidden by AI moderation]</span>
-          ) : (
-            comment.content
-          )}
+          {comment.content}
         </p>
-        {isHidden && comment.hidden_reason && (
-          <div className="flex items-center gap-1 mt-1">
-            <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-              {comment.hidden_reason}
-            </Badge>
-          </div>
-        )}
         <p className="text-xs text-muted-foreground mt-0.5">
           {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
         </p>

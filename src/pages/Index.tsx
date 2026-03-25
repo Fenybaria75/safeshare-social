@@ -1,21 +1,39 @@
-import { useState } from "react";
-import { Shield, Instagram } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Shield, Instagram, ShieldAlert, LogOut } from "lucide-react";
 import { usePosts } from "@/hooks/usePosts";
 import { useProfiles } from "@/hooks/useProfiles";
 import { PostCard } from "@/components/PostCard";
 import { UserSwitcher } from "@/components/UserSwitcher";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { NavLink } from "@/components/NavLink";
 import type { Profile } from "@/types";
 
 const Index = () => {
   const { data: posts, isLoading: postsLoading } = usePosts();
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
+  const navigate = useNavigate();
 
-  // Set default user once loaded
-  if (profiles && !currentUser) {
-    setCurrentUser(profiles[0]);
-  }
+  useEffect(() => {
+    const stored = sessionStorage.getItem("safegram_user");
+    if (stored) {
+      setCurrentUser(JSON.parse(stored));
+    } else if (profiles && profiles.length > 0) {
+      setCurrentUser(profiles[0]);
+    }
+  }, [profiles]);
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("safegram_user");
+    navigate("/");
+  };
+
+  const handleSwitchUser = (profile: Profile) => {
+    setCurrentUser(profile);
+    sessionStorage.setItem("safegram_user", JSON.stringify(profile));
+  };
 
   const isLoading = postsLoading || profilesLoading;
 
@@ -28,9 +46,18 @@ const Index = () => {
             <Instagram className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold gradient-text">SafeGram</h1>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
-            <Shield className="h-3.5 w-3.5 text-primary" />
-            <span>AI Moderation Active</span>
+          <div className="flex items-center gap-3">
+            <NavLink to="/moderation" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors bg-muted px-3 py-1.5 rounded-full">
+              <ShieldAlert className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Moderation</span>
+            </NavLink>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
+              <Shield className="h-3.5 w-3.5 text-primary" />
+              <span className="hidden sm:inline">AI Active</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="h-8 w-8">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
@@ -39,7 +66,6 @@ const Index = () => {
         {/* Sidebar */}
         <aside className="hidden md:block w-64 shrink-0">
           <div className="sticky top-20 space-y-6">
-            {/* Current user info */}
             {currentUser && (
               <div className="bg-card rounded-xl border border-border p-4 text-center space-y-2">
                 <img
@@ -57,27 +83,24 @@ const Index = () => {
               </div>
             )}
 
-            {/* User switcher */}
             {profiles && currentUser && (
               <div className="bg-card rounded-xl border border-border p-4">
                 <UserSwitcher
                   profiles={profiles}
                   currentUser={currentUser}
-                  onSwitch={setCurrentUser}
+                  onSwitch={handleSwitchUser}
                 />
               </div>
             )}
 
-            {/* Moderation info */}
             <div className="bg-card rounded-xl border border-border p-4 space-y-2">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" />
                 <p className="text-sm font-semibold">AI Moderation</p>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Comments are analyzed in real-time by AI to detect cyberbullying, hate speech, 
-                and abusive content. Harmful comments are automatically hidden. 
-                Supports multiple languages and emoji detection.
+                Comments are analyzed in real-time by AI to detect cyberbullying, hate speech,
+                and abusive content across 50+ languages. Supports emoji and disguised text detection.
               </p>
             </div>
           </div>
@@ -92,7 +115,7 @@ const Index = () => {
                 {profiles.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => setCurrentUser(p)}
+                    onClick={() => handleSwitchUser(p)}
                     className={`flex flex-col items-center gap-1 shrink-0 ${
                       p.id === currentUser.id ? "opacity-100" : "opacity-50"
                     }`}
