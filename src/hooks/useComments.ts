@@ -3,13 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 import type { ModerationResult } from "@/types";
 import { toast } from "sonner";
 
-async function moderateComment(comment: string): Promise<ModerationResult> {
+export async function moderateComment(comment: string): Promise<ModerationResult> {
   const { data, error } = await supabase.functions.invoke("moderate-comment", {
     body: { comment },
   });
   if (error) {
     console.error("Moderation error:", error);
-    return { is_harmful: false, reason: "Moderation unavailable", severity: "none" };
+    return {
+      is_harmful: false,
+      reason: "Moderation unavailable",
+      severity: "none",
+      category: "non-toxic",
+      detected_language: "unknown",
+      toxic_words: [],
+      emoji_analysis: [],
+      confidence_score: 0,
+    };
   }
   return data as ModerationResult;
 }
@@ -27,10 +36,12 @@ export function useAddComment() {
       profileId: string;
       content: string;
     }) => {
-      // Step 1: AI moderation
       const modResult = await moderateComment(content);
 
-      // Step 2: Insert comment (hidden if harmful)
+      const reasonText = modResult.is_harmful
+        ? `[${modResult.category}] ${modResult.reason} (lang: ${modResult.detected_language}, score: ${modResult.confidence_score})`
+        : null;
+
       const { data, error } = await supabase
         .from("comments")
         .insert({
@@ -38,7 +49,7 @@ export function useAddComment() {
           profile_id: profileId,
           content,
           is_hidden: modResult.is_harmful,
-          hidden_reason: modResult.is_harmful ? modResult.reason : null,
+          hidden_reason: reasonText,
         })
         .select("*, profiles (*)")
         .single();
@@ -51,7 +62,7 @@ export function useAddComment() {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       if (result.moderation.is_harmful) {
         toast.error("Comment hidden by AI moderation", {
-          description: result.moderation.reason,
+          description: `${result.moderation.category}: ${result.moderation.reason}`,
         });
       }
     },

@@ -21,10 +21,9 @@ serve(async (req) => {
       );
     }
 
-    // Enforce max length to reduce prompt injection surface
     if (comment.length > 1000) {
       return new Response(
-        JSON.stringify({ error: "Comment too long" }),
+        JSON.stringify({ error: "Comment too long (max 1000 chars)" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -46,65 +45,56 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a cyberbullying and toxicity detection system implementing the MuRIL (Multilingual Representations for Indian Languages) pipeline architecture combined with multilingual BERT capabilities, running on Google Gemini.
+            content: `You are a cyberbullying and toxicity detection system implementing a MuRIL (Multilingual Representations for Indian Languages) inspired pipeline combined with XLM-RoBERTa cross-lingual capabilities, running on Google Gemini.
 
-## MuRIL Pipeline Architecture
-
-This system follows the MuRIL research paper methodology (Khanuja et al., 2021) adapted for real-time comment moderation:
+## MuRIL + XLM-RoBERTa Pipeline Architecture
 
 ### Stage 1: Text Preprocessing & Normalization
-- **Script normalization**: Convert mixed-script text (Devanagari, Latin, Arabic, CJK) to normalized Unicode form (NFC)
-- **Leetspeak decoding**: Map obfuscated characters back to base forms (e.g., "h8" → "hate", "f4g" → slur, "r3tard" → slur)
-- **Spacing trick reversal**: Collapse deliberately spaced text ("s t u p i d" → "stupid", "u g l y" → "ugly")
-- **Symbol substitution reversal**: Decode symbol-replaced words ("@$$" → "ass", "$hit" → "shit", "b!tch" → "bitch")
-- **Homoglyph normalization**: Map visually similar Unicode characters to ASCII equivalents (Cyrillic а → Latin a, etc.)
+- Script normalization: Convert mixed-script text (Devanagari, Latin, Arabic, CJK) to normalized Unicode (NFC)
+- Leetspeak decoding: "h8" → "hate", "f4g" → slur, "r3tard" → slur
+- Spacing trick reversal: "s t u p i d" → "stupid"
+- Symbol substitution: "@$$" → "ass", "$hit" → profanity, "b!tch" → slur
+- Homoglyph normalization: Cyrillic а → Latin a, etc.
 
 ### Stage 2: Multilingual Tokenization (MuRIL-style)
-- Apply subword tokenization compatible with 17 Indian languages + transliterated variants
-- Handle code-switching detection: identify language boundaries within a single comment
-- Supported language families:
-  - **Indo-Aryan**: Hindi, Urdu, Bengali, Marathi, Gujarati, Punjabi, Odia, Assamese, Sindhi, Nepali
-  - **Dravidian**: Tamil, Telugu, Kannada, Malayalam
-  - **European**: English, Spanish, French, Portuguese, German, Italian, Dutch, Russian, Ukrainian, Polish
-  - **Semitic/Turkic**: Arabic, Farsi, Turkish, Hebrew
-  - **East Asian**: Chinese (Simplified/Traditional), Japanese, Korean
-  - **Southeast Asian**: Thai, Vietnamese, Indonesian, Malay, Filipino
-  - **African**: Swahili, Yoruba, Zulu
-  - **Transliterated forms**: Romanized Hindi (Hinglish), Romanized Arabic (Arabizi), etc.
+- Subword tokenization for 17 Indian languages + transliterated variants
+- Code-switching detection across language boundaries
+- Languages: Hindi, Urdu, Bengali, Marathi, Tamil, Telugu, Kannada, Malayalam, Gujarati, Punjabi, English, Spanish, French, Arabic, Chinese, Japanese, Korean, Thai, Indonesian, Russian, and transliterated forms (Hinglish, Arabizi, etc.)
 
-### Stage 3: Semantic Embedding Analysis
-- Generate contextual embeddings for the input text using cross-lingual transfer learning
-- Compute similarity scores against known toxic/abusive pattern clusters
-- Distinguish contextual usage: "You killed it! 🔥" (positive) vs "I'll kill you" (threat)
-- Handle sarcasm detection: "wow you're SO smart 🙄" (passive-aggressive bullying)
+### Stage 3: XLM-RoBERTa Semantic Embedding Analysis
+- Cross-lingual contextual embeddings
+- Similarity scores against toxic/abusive pattern clusters
+- Context distinction: "You killed it! 🔥" (positive) vs "I'll kill you" (threat)
+- Sarcasm detection: "wow you're SO smart 🙄" (passive-aggressive)
 
 ### Stage 4: Emoji Sentiment Classification
-- Classify emoji sequences using an emoji toxicity lexicon:
-  - **Harmful combinations**: 🤮💀🖕🤡🐒🐵 (racial slurs), 🔫🗡️💣 (threats)
-  - **Contextual abuse**: 🐷🐖 (body shaming when directed at someone), 🤡 (mockery)
-  - **Emoji-only messages**: Detect purely emoji-based bullying
-- Apply cultural context: emoji meaning varies by region and context
+- Emoji toxicity lexicon mapping:
+  - Harmful: 🤮💀🖕🤡🐒🐵 (racial), 🔫🗡️💣 (threats)
+  - Body shaming: 🐷🐖 when directed at someone
+  - Mockery: 🤡 in bullying context
+  - Emoji-only abuse detection
+- Each emoji must be analyzed with its textual meaning and sentiment classification
 
 ### Stage 5: Toxicity Classification
-Detect and classify the following categories:
-- **Direct abuse**: Insults, slurs, profanity, name-calling
-- **Threats**: Violence, doxxing, harm, death threats
-- **Hate speech**: Targeting race, gender, religion, sexuality, disability, caste, ethnicity
-- **Cyberbullying patterns**: Repeated targeting, body shaming, exclusion ("nobody likes you"), social manipulation
-- **Disguised hate speech**: All forms identified in Stage 1 preprocessing
+Categories:
+- non-toxic: Safe content (score < 0.3)
+- offensive: Insults, profanity, name-calling (score 0.3-0.5)
+- cyberbullying: Repeated targeting, body shaming, exclusion, social manipulation (score 0.5-0.7)
+- hate_speech: Targeting race, gender, religion, sexuality, disability, caste (score 0.5-0.7)
+- threat: Violence, doxxing, harm, death threats (score > 0.7)
 
 ### Output Requirements
-You MUST respond using the provided tool function. Provide accurate classification minimizing false positives while catching genuine abuse. The severity levels map to MuRIL confidence thresholds:
-- none: <0.3 toxicity score (safe content)
-- low: 0.3-0.5 toxicity score (borderline, monitor)
-- medium: 0.5-0.7 toxicity score (likely harmful, auto-hide)
-- high: >0.7 toxicity score (clearly harmful, auto-hide + flag for review)
-
-Comments with severity "medium" or "high" should be marked as is_harmful: true.`,
+You MUST respond using the provided tool function. Return ALL fields accurately:
+- Identify the specific toxic words/phrases in the original text
+- Analyze every emoji individually with meaning and sentiment
+- Detect the primary language of the comment
+- Assign confidence score (0.0 to 1.0)
+- Severity mapping: none (<0.3), low (0.3-0.5), medium (0.5-0.7), high (>0.7)
+- is_harmful = true when severity is "medium" or "high"`,
           },
           {
             role: "user",
-            content: `Run the MuRIL pipeline on this comment and classify it:\n\n${comment}`,
+            content: `Run the full MuRIL + XLM-RoBERTa pipeline on this comment and classify it:\n\n${comment}`,
           },
         ],
         tools: [
@@ -112,25 +102,61 @@ Comments with severity "medium" or "high" should be marked as is_harmful: true.`
             type: "function",
             function: {
               name: "classify_comment",
-              description: "Output the MuRIL pipeline classification result for a comment",
+              description: "Output the complete MuRIL + XLM-RoBERTa pipeline classification result",
               parameters: {
                 type: "object",
                 properties: {
                   is_harmful: {
                     type: "boolean",
-                    description: "true if MuRIL toxicity score >= 0.5 (medium or high severity)",
+                    description: "true if toxicity score >= 0.5 (medium or high severity)",
                   },
                   reason: {
                     type: "string",
-                    description: "Brief MuRIL classification reason including detected category and language",
+                    description: "Brief classification reason including detected category and language context",
                   },
                   severity: {
                     type: "string",
                     enum: ["none", "low", "medium", "high"],
-                    description: "MuRIL toxicity severity level based on confidence threshold",
+                    description: "Toxicity severity level based on confidence threshold",
+                  },
+                  category: {
+                    type: "string",
+                    enum: ["non-toxic", "offensive", "cyberbullying", "hate_speech", "threat"],
+                    description: "The primary toxicity category detected",
+                  },
+                  detected_language: {
+                    type: "string",
+                    description: "Primary language detected (e.g., English, Hindi, Hinglish, Arabic, etc.)",
+                  },
+                  toxic_words: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "List of specific toxic/abusive words or phrases found in the original text. Empty array if non-toxic.",
+                  },
+                  emoji_analysis: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        emoji: { type: "string", description: "The emoji character" },
+                        meaning: { type: "string", description: "Textual meaning of the emoji" },
+                        sentiment: {
+                          type: "string",
+                          enum: ["positive", "negative", "neutral", "hostile"],
+                          description: "Sentiment classification of the emoji in this context",
+                        },
+                      },
+                      required: ["emoji", "meaning", "sentiment"],
+                      additionalProperties: false,
+                    },
+                    description: "Analysis of each emoji in the comment. Empty array if no emojis present.",
+                  },
+                  confidence_score: {
+                    type: "number",
+                    description: "Toxicity confidence score from 0.0 (safe) to 1.0 (highly toxic)",
                   },
                 },
-                required: ["is_harmful", "reason", "severity"],
+                required: ["is_harmful", "reason", "severity", "category", "detected_language", "toxic_words", "emoji_analysis", "confidence_score"],
                 additionalProperties: false,
               },
             },
@@ -163,7 +189,16 @@ Comments with severity "medium" or "high" should be marked as is_harmful: true.`
 
     if (!toolCall) {
       return new Response(
-        JSON.stringify({ is_harmful: false, reason: "Could not classify", severity: "none" }),
+        JSON.stringify({
+          is_harmful: false,
+          reason: "Could not classify",
+          severity: "none",
+          category: "non-toxic",
+          detected_language: "unknown",
+          toxic_words: [],
+          emoji_analysis: [],
+          confidence_score: 0,
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
