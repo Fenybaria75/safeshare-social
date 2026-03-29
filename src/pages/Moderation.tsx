@@ -1,24 +1,39 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, ShieldAlert, ArrowLeft, AlertTriangle, Search, Filter, BarChart3 } from "lucide-react";
+import { Shield, ShieldAlert, ArrowLeft, AlertTriangle, Search, Filter, BarChart3, User } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePosts } from "@/hooks/usePosts";
-import type { Comment } from "@/types";
+import type { Comment, Profile } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 
 const Moderation = () => {
   const { data: posts, isLoading } = usePosts();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("safegram_user");
+    if (stored) {
+      setCurrentUser(JSON.parse(stored));
+    } else {
+      navigate("/");
+    }
+  }, [navigate]);
+
+  // Filter posts belonging to the current user
+  const userPosts = useMemo(() => {
+    if (!posts || !currentUser) return [];
+    return posts.filter((p) => p.profile_id === currentUser.id);
+  }, [posts, currentUser]);
 
   const allFlaggedComments = useMemo(() => {
-    if (!posts) return [];
     const flagged: (Comment & { postCaption: string | null; postImage: string })[] = [];
-    for (const post of posts) {
+    for (const post of userPosts) {
       for (const comment of post.comments || []) {
         if (comment.is_hidden) {
           flagged.push({ ...comment, postCaption: post.caption, postImage: post.image_url });
@@ -26,12 +41,11 @@ const Moderation = () => {
       }
     }
     return flagged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [posts]);
+  }, [userPosts]);
 
   const totalComments = useMemo(() => {
-    if (!posts) return 0;
-    return posts.reduce((sum, p) => sum + (p.comments?.length || 0), 0);
-  }, [posts]);
+    return userPosts.reduce((sum, p) => sum + (p.comments?.length || 0), 0);
+  }, [userPosts]);
 
   const filtered = allFlaggedComments.filter(
     (c) =>
@@ -56,16 +70,51 @@ const Moderation = () => {
               <h1 className="text-lg font-bold">Moderation Dashboard</h1>
             </div>
           </div>
+          {currentUser && (
+            <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-full">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={currentUser.avatar_url || ""} />
+                <AvatarFallback className="text-[8px] bg-primary/20">
+                  {currentUser.username.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs font-medium">@{currentUser.username}</span>
+            </div>
+          )}
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Current user info */}
+        {currentUser && (
+          <div className="bg-card rounded-xl border border-primary/20 p-4 flex items-center gap-4">
+            <Avatar className="h-12 w-12 ring-2 ring-primary/30">
+              <AvatarImage src={currentUser.avatar_url || ""} />
+              <AvatarFallback className="bg-primary/20 text-sm">
+                {currentUser.username.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-semibold">{currentUser.display_name}</p>
+              <p className="text-xs text-muted-foreground">
+                Showing moderation data for your {userPosts.length} post{userPosts.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <div className="ml-auto">
+              <Badge variant="outline" className="text-xs">
+                <User className="h-3 w-3 mr-1" />
+                MuRIL + Gemini AI
+              </Badge>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-card rounded-xl border border-border p-4 space-y-1">
             <div className="flex items-center gap-2 text-muted-foreground">
               <BarChart3 className="h-4 w-4" />
-              <span className="text-xs font-medium">Total Comments</span>
+              <span className="text-xs font-medium">Comments on Your Posts</span>
             </div>
             <p className="text-2xl font-bold">{totalComments}</p>
           </div>
@@ -85,6 +134,20 @@ const Moderation = () => {
           </div>
         </div>
 
+        {/* MuRIL info */}
+        <div className="bg-card rounded-xl border border-primary/20 p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-primary" />
+            <p className="text-sm font-semibold">MuRIL-Inspired Detection Pipeline</p>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Comments are processed through a MuRIL (Multilingual Representations for Indian Languages) inspired pipeline
+            running on Google Gemini. The system performs <strong>tokenization</strong>, <strong>semantic embedding analysis</strong>,
+            <strong>cross-lingual transfer learning</strong> for 50+ languages, <strong>emoji sentiment classification</strong>,
+            and <strong>disguised text normalization</strong> (leetspeak, homoglyphs, spacing tricks) before final toxicity classification.
+          </p>
+        </div>
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -101,7 +164,7 @@ const Moderation = () => {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold text-muted-foreground">
-              {filtered.length} Flagged Comment{filtered.length !== 1 ? "s" : ""}
+              {filtered.length} Flagged Comment{filtered.length !== 1 ? "s" : ""} on Your Posts
             </h2>
           </div>
 
@@ -113,7 +176,9 @@ const Moderation = () => {
             <div className="bg-card rounded-xl border border-border p-8 text-center space-y-2">
               <Shield className="h-10 w-10 text-primary mx-auto" />
               <p className="text-muted-foreground text-sm">
-                {searchTerm ? "No flagged comments match your search." : "No flagged comments yet. The community is behaving well! 🎉"}
+                {searchTerm
+                  ? "No flagged comments match your search."
+                  : "No flagged comments on your posts. Your community is safe! 🎉"}
               </p>
             </div>
           ) : (
@@ -153,13 +218,13 @@ const Moderation = () => {
                   {comment.hidden_reason && (
                     <div className="flex items-center gap-2 pl-11">
                       <Badge variant="destructive" className="text-xs px-2.5 py-0.5">
-                        AI Reason: {comment.hidden_reason}
+                        MuRIL Detection: {comment.hidden_reason}
                       </Badge>
                     </div>
                   )}
                   {comment.postCaption && (
                     <p className="text-xs text-muted-foreground pl-11">
-                      On post: "{comment.postCaption}"
+                      On your post: "{comment.postCaption}"
                     </p>
                   )}
                 </div>
