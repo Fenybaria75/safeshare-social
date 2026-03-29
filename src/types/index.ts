@@ -29,8 +29,19 @@ export interface Comment {
   profiles: Profile;
 }
 
+export interface EmojiAnalysis {
+  emoji: string;
+  meaning: string;
+  sentiment: "positive" | "negative" | "neutral" | "hostile";
+}
+
 export interface ModerationResult {
   is_harmful: boolean;
   reason: string;
   severity: "none" | "low" | "medium" | "high";
+  category: "non-toxic" | "offensive" | "cyberbullying" | "hate_speech" | "threat";
+  detected_language: string;
+  toxic_words: string[];
+  emoji_analysis: EmojiAnalysis[];
+  confidence_score: number;
 }
