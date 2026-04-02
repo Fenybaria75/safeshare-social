@@ -25,7 +25,8 @@ import {
   Pie,
 } from "recharts";
 import { usePosts } from "@/hooks/usePosts";
-import type { Comment, Profile } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
+import type { Comment } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 
 const CATEGORY_COLORS: Record<string, string> = {
