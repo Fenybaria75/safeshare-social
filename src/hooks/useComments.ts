@@ -29,13 +29,15 @@ export function useAddComment() {
   return useMutation({
     mutationFn: async ({
       postId,
-      profileId,
       content,
     }: {
       postId: string;
-      profileId: string;
       content: string;
     }) => {
+      // Get the authenticated user's ID server-side
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("You must be logged in to comment");
+
       const modResult = await moderateComment(content);
 
       const reasonText = modResult.is_harmful
@@ -46,7 +48,7 @@ export function useAddComment() {
         .from("comments")
         .insert({
           post_id: postId,
-          profile_id: profileId,
+          profile_id: user.id,
           content,
           is_hidden: modResult.is_harmful,
           hidden_reason: reasonText,

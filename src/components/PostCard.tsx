@@ -27,7 +27,7 @@ export function PostCard({ post, currentUser }: PostCardProps) {
     e.preventDefault();
     if (!commentText.trim()) return;
     addComment.mutate(
-      { postId: post.id, profileId: currentUser.id, content: commentText.trim() },
+      { postId: post.id, content: commentText.trim() },
       { onSuccess: () => setCommentText("") }
     );
   };
