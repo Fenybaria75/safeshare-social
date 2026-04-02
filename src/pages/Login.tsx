@@ -1,27 +1,62 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Instagram, LogIn, Eye, EyeOff } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Shield, Instagram, LogIn, Eye, EyeOff, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useProfiles } from "@/hooks/useProfiles";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { Profile } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Login = () => {
-  const { data: profiles, isLoading } = useProfiles();
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
+  const { user, loading } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { signIn, signUp } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/feed");
+    }
+  }, [user, loading, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProfile) return;
-    // Store selected profile in sessionStorage for demo
-    sessionStorage.setItem("safegram_user", JSON.stringify(selectedProfile));
-    navigate("/feed");
+    setSubmitting(true);
+
+    if (isSignUp) {
+      if (!username.trim() || !displayName.trim()) {
+        toast.error("Username and display name are required");
+        setSubmitting(false);
+        return;
+      }
+      const { error } = await signUp(email, password, username.trim(), displayName.trim());
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Account created! You can now sign in.");
+        setIsSignUp(false);
+      }
+    } else {
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast.error(error.message);
+      }
+    }
+    setSubmitting(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -43,55 +78,48 @@ const Login = () => {
 
         {/* Login Card */}
         <div className="bg-card rounded-2xl border border-border p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-center">Sign in to your account</h2>
+          <h2 className="text-lg font-semibold text-center">
+            {isSignUp ? "Create an account" : "Sign in to your account"}
+          </h2>
 
-          {/* Profile Selection */}
-          <div className="space-y-2">
-            <label className="text-sm text-muted-foreground font-medium">Select a profile</label>
-            {isLoading ? (
-              <div className="grid grid-cols-5 gap-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 rounded-xl" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-5 gap-2">
-                {profiles?.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedProfile(p)}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                      selectedProfile?.id === p.id
-                        ? "bg-primary/15 ring-2 ring-primary scale-105"
-                        : "bg-muted/50 hover:bg-muted"
-                    }`}
-                  >
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={p.avatar_url || ""} />
-                      <AvatarFallback className="bg-muted text-[10px]">
-                        {p.username.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-[9px] text-muted-foreground truncate w-full text-center">
-                      {p.username}
-                    </span>
-                  </button>
-                ))}
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <>
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground font-medium">Username</label>
+                  <Input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Choose a username"
+                    className="bg-muted/50"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground font-medium">Display Name</label>
+                  <Input
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your display name"
+                    className="bg-muted/50"
+                    required
+                  />
+                </div>
+              </>
             )}
-          </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm text-muted-foreground font-medium">Username</label>
+              <label className="text-sm text-muted-foreground font-medium">Email</label>
               <Input
-                value={selectedProfile?.username || ""}
-                readOnly
-                placeholder="Select a profile above"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
                 className="bg-muted/50"
+                required
               />
             </div>
+
             <div className="space-y-2">
               <label className="text-sm text-muted-foreground font-medium">Password</label>
               <div className="relative">
@@ -99,8 +127,10 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Any password (demo mode)"
+                  placeholder="Enter your password"
                   className="bg-muted/50 pr-10"
+                  required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -110,21 +140,37 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <p className="text-[10px] text-muted-foreground">Demo: any password works</p>
             </div>
 
             <Button
               type="submit"
-              disabled={!selectedProfile}
+              disabled={submitting}
               className="w-full gradient-bg text-primary-foreground font-semibold"
             >
-              <LogIn className="h-4 w-4 mr-2" />
-              Sign In
+              {isSignUp ? (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {submitting ? "Creating..." : "Sign Up"}
+                </>
+              ) : (
+                <>
+                  <LogIn className="h-4 w-4 mr-2" />
+                  {submitting ? "Signing in..." : "Sign In"}
+                </>
+              )}
             </Button>
           </form>
+
+          <div className="text-center">
+            <button
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm text-primary hover:underline"
+            >
+              {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+            </button>
+          </div>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-xs text-muted-foreground">
           SafeGram uses AI to detect and filter cyberbullying in real-time.
           <br />
