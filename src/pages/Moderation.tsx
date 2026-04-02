@@ -64,18 +64,15 @@ function extractSeverity(reason: string | null): string {
 
 const Moderation = () => {
   const { data: posts, isLoading } = usePosts();
+  const { user, profile: currentUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("safegram_user");
-    if (stored) {
-      setCurrentUser(JSON.parse(stored));
-    } else {
+    if (!authLoading && !user) {
       navigate("/");
     }
-  }, [navigate]);
+  }, [user, authLoading, navigate]);
 
   const userPosts = useMemo(() => {
     if (!posts || !currentUser) return [];
