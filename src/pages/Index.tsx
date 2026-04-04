@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Instagram, ShieldAlert, LogOut, Zap, Layers } from "lucide-react";
+import { Shield, Instagram, ShieldAlert, LogOut } from "lucide-react";
 import { usePosts } from "@/hooks/usePosts";
 import { useProfiles } from "@/hooks/useProfiles";
 import { PostCard } from "@/components/PostCard";
