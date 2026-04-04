@@ -275,17 +275,34 @@ const Moderation = () => {
           </div>
         )}
 
-        {/* MuRIL info */}
-        <div className="bg-card rounded-xl border border-primary/20 p-4 space-y-2">
+        {/* Flagged vs Safe Comparison Chart - always visible */}
+        <div className="bg-card rounded-xl border border-border p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            <p className="text-sm font-semibold">MuRIL + XLM-RoBERTa Detection Pipeline</p>
+            <BarChart3 className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">Flagged vs Safe Comments</h3>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Comments are processed through a 5-stage pipeline: <strong>Text Preprocessing</strong> (normalization, leetspeak decoding),{" "}
-            <strong>MuRIL Tokenization</strong> (17+ Indian languages), <strong>XLM-RoBERTa Embeddings</strong> (cross-lingual semantic analysis),{" "}
-            <strong>Emoji Sentiment Classification</strong> (toxicity lexicon), and <strong>Toxicity Scoring</strong> (multi-category classification with confidence scores).
-          </p>
+          <ChartContainer config={{ safe: { label: "Safe", color: "hsl(142, 71%, 45%)" }, flagged: { label: "Flagged", color: "hsl(0, 72%, 51%)" } }} className="h-52">
+            <BarChart
+              data={[
+                { name: "Safe", value: totalComments - allFlaggedComments.length, fill: "hsl(142, 71%, 45%)" },
+                { name: "Flagged", value: allFlaggedComments.length, fill: "hsl(0, 72%, 51%)" },
+              ]}
+              margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+              <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                {[
+                  { fill: "hsl(142, 71%, 45%)" },
+                  { fill: "hsl(0, 72%, 51%)" },
+                ].map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ChartContainer>
         </div>
 
         {/* Search */}
