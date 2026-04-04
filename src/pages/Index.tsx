@@ -45,17 +45,9 @@ const Index = () => {
             <h1 className="text-xl font-bold gradient-text">SafeGram</h1>
           </div>
           <div className="flex items-center gap-2">
-            <NavLink to="/test" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors bg-muted px-3 py-1.5 rounded-full">
-              <Zap className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Test</span>
-            </NavLink>
             <NavLink to="/moderation" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors bg-muted px-3 py-1.5 rounded-full">
               <ShieldAlert className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Moderation</span>
-            </NavLink>
-            <NavLink to="/architecture" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-accent transition-colors bg-muted px-3 py-1.5 rounded-full">
-              <Layers className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Architecture</span>
             </NavLink>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
               <Shield className="h-3.5 w-3.5 text-primary" />
