@@ -93,14 +93,8 @@ const Index = () => {
             <div className="bg-card rounded-xl border border-border p-4 space-y-2">
               <p className="text-sm font-semibold">Quick Links</p>
               <div className="space-y-1">
-                <button onClick={() => navigate("/test")} className="w-full text-left text-xs text-muted-foreground hover:text-primary transition-colors py-1">
-                  🧪 Live Detection Test
-                </button>
                 <button onClick={() => navigate("/moderation")} className="w-full text-left text-xs text-muted-foreground hover:text-destructive transition-colors py-1">
                   🛡️ Moderation Dashboard
-                </button>
-                <button onClick={() => navigate("/architecture")} className="w-full text-left text-xs text-muted-foreground hover:text-accent transition-colors py-1">
-                  📐 System Architecture
                 </button>
               </div>
             </div>
