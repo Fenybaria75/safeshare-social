@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const Login = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, signIn, signUp } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -16,7 +16,6 @@ const Login = () => {
   const [displayName, setDisplayName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
 
   useEffect(() => {
     if (!loading && user) {
@@ -38,8 +37,13 @@ const Login = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Account created! You can now sign in.");
-        setIsSignUp(false);
+        toast.success("Account created! Signing you in...");
+        // Auto sign-in after successful signup
+        const { error: signInError } = await signIn(email, password);
+        if (signInError) {
+          toast.error("Account created but could not auto sign-in: " + signInError.message + ". Please sign in manually.");
+          setIsSignUp(false);
+        }
       }
     } else {
       const { error } = await signIn(email, password);
