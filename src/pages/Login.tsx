@@ -37,8 +37,13 @@ const Login = () => {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Account created! You can now sign in.");
-        setIsSignUp(false);
+        toast.success("Account created! Signing you in...");
+        // Auto sign-in after successful signup
+        const { error: signInError } = await signIn(email, password);
+        if (signInError) {
+          toast.error("Account created but could not auto sign-in: " + signInError.message + ". Please sign in manually.");
+          setIsSignUp(false);
+        }
       }
     } else {
       const { error } = await signIn(email, password);
