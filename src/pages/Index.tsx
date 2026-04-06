@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Instagram, ShieldAlert, LogOut } from "lucide-react";
+import { Shield, Instagram, ShieldAlert, LogOut, Search, Sparkles, UserCircle } from "lucide-react";
 import { usePosts } from "@/hooks/usePosts";
 import { useProfiles } from "@/hooks/useProfiles";
 import { PostCard } from "@/components/PostCard";
@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
+import { CreatePostDialog } from "@/components/CreatePostDialog";
 
 const Index = () => {
   const { data: posts, isLoading: postsLoading } = usePosts();
@@ -44,15 +45,22 @@ const Index = () => {
             <Instagram className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold gradient-text">SafeGram</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <CreatePostDialog />
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/search")}>
+              <Search className="h-4 w-4" />
+            </Button>
+            <NavLink to="/ai-chat" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors bg-muted px-3 py-1.5 rounded-full">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">AI</span>
+            </NavLink>
             <NavLink to="/moderation" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors bg-muted px-3 py-1.5 rounded-full">
               <ShieldAlert className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Moderation</span>
+              <span className="hidden sm:inline">Mod</span>
             </NavLink>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
-              <Shield className="h-3.5 w-3.5 text-primary" />
-              <span className="hidden sm:inline">AI Active</span>
-            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(user ? `/profile/${user.id}` : "/profile")}>
+              <UserCircle className="h-4 w-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={handleLogout} className="h-8 w-8">
               <LogOut className="h-4 w-4" />
             </Button>
