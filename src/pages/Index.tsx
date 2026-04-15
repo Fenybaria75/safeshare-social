@@ -88,15 +88,6 @@ const Index = () => {
               </div>
             )}
 
-            <div className="bg-card rounded-xl border border-border p-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-primary" />
-                <p className="text-sm font-semibold">AI Moderation</p>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                MuRIL + XLM-RoBERTa pipeline detects cyberbullying, hate speech, threats across 50+ languages with emoji sentiment analysis.
-              </p>
-            </div>
 
             <div className="bg-card rounded-xl border border-border p-4 space-y-2">
               <p className="text-sm font-semibold">Quick Links</p>
