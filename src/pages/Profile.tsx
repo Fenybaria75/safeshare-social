@@ -28,51 +28,72 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [editName, setEditName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
   const [editBio, setEditBio] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const profileId = id || user?.id;
   const isOwnProfile = user?.id === profileId;
+
+  const fetchData = async () => {
+    if (!profileId) return;
+    setLoading(true);
+    const [profileRes, postsRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", profileId).single(),
+      supabase
+        .from("posts")
+        .select("*, profiles (*), comments (*, profiles (*)), likes (count)")
+        .eq("profile_id", profileId)
+        .order("created_at", { ascending: false }),
+    ]);
+    setProfile(profileRes.data as ProfileType | null);
+    setPosts((postsRes.data as unknown as Post[]) || []);
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/");
       return;
     }
-    if (!profileId) return;
-
-    const fetchData = async () => {
-      setLoading(true);
-      const [profileRes, postsRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", profileId).single(),
-        supabase
-          .from("posts")
-          .select("*, profiles (*), comments (*, profiles (*)), likes (count)")
-          .eq("profile_id", profileId)
-          .order("created_at", { ascending: false }),
-      ]);
-      setProfile(profileRes.data as ProfileType | null);
-      setPosts((postsRes.data as unknown as Post[]) || []);
-      setLoading(false);
-    };
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId, authLoading, user, navigate]);
 
   const handleEdit = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ display_name: editName.trim(), bio: editBio.trim() || null })
-      .eq("id", user.id);
-    if (error) {
-      toast.error("Failed to update profile");
-    } else {
+    try {
+      let avatar_url = profile?.avatar_url || null;
+      if (avatarFile) {
+        const ext = avatarFile.name.split(".").pop();
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarFile, { upsert: true });
+        if (upErr) throw upErr;
+        avatar_url = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+      }
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          username: editUsername.trim(),
+          display_name: editName.trim(),
+          bio: editBio.trim() || null,
+          avatar_url,
+        })
+        .eq("id", user.id);
+      if (error) throw error;
       toast.success("Profile updated!");
-      setProfile((p) => p ? { ...p, display_name: editName.trim(), bio: editBio.trim() || null } : p);
       setEditOpen(false);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      await fetchData();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   if (authLoading || loading) {
@@ -106,7 +127,10 @@ const Profile = () => {
               setEditOpen(o);
               if (o) {
                 setEditName(profile.display_name);
+                setEditUsername(profile.username);
                 setEditBio(profile.bio || "");
+                setAvatarPreview(profile.avatar_url || null);
+                setAvatarFile(null);
               }
             }}>
               <DialogTrigger asChild>
@@ -119,6 +143,26 @@ const Profile = () => {
                   <DialogTitle>Edit Profile</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <Avatar className="h-20 w-20 ring-2 ring-primary/30">
+                      <AvatarImage src={avatarPreview || ""} />
+                      <AvatarFallback>{editUsername.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <label className="text-xs text-primary cursor-pointer hover:underline">
+                      Change avatar
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        if (f.size > 5 * 1024 * 1024) { toast.error("Max 5MB"); return; }
+                        setAvatarFile(f);
+                        setAvatarPreview(URL.createObjectURL(f));
+                      }} />
+                    </label>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-muted-foreground font-medium">Username</label>
+                    <Input value={editUsername} onChange={(e) => setEditUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} className="bg-muted/50" />
+                  </div>
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground font-medium">Display Name</label>
                     <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="bg-muted/50" />
@@ -127,7 +171,7 @@ const Profile = () => {
                     <label className="text-sm text-muted-foreground font-medium">Bio</label>
                     <Textarea value={editBio} onChange={(e) => setEditBio(e.target.value)} className="bg-muted/50 resize-none" rows={3} maxLength={200} />
                   </div>
-                  <Button onClick={handleEdit} disabled={saving || !editName.trim()} className="w-full gradient-bg text-primary-foreground">
+                  <Button onClick={handleEdit} disabled={saving || !editName.trim() || !editUsername.trim()} className="w-full gradient-bg text-primary-foreground">
                     {saving ? "Saving..." : "Save"}
                   </Button>
                 </div>
