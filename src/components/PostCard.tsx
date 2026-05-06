@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Heart, MessageCircle, Shield, ShieldAlert, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, MessageCircle, Shield, ShieldAlert, ChevronDown, ChevronUp, AlertTriangle, Trash2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { Post, Profile, Comment } from "@/types";
 import { useAddComment } from "@/hooks/useComments";
+import { useToggleLike, useDeletePost } from "@/hooks/useLikes";
+import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 
 interface PostCardProps {

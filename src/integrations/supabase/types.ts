@@ -251,6 +251,54 @@ export type Database = {
         }
         Relationships: []
       }
+      reel_likes: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          reel_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          reel_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          reel_id?: string
+        }
+        Relationships: []
+      }
+      reels: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          media_type: string
+          media_url: string
+          profile_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string
+          media_url: string
+          profile_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          media_type?: string
+          media_url?: string
+          profile_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
