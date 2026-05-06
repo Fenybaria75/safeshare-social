@@ -19,11 +19,30 @@ export function PostCard({ post, currentUser }: PostCardProps) {
   const [commentText, setCommentText] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
   const addComment = useAddComment();
+  const toggleLike = useToggleLike();
+  const deletePost = useDeletePost();
 
   const visibleComments = post.comments?.filter((c) => !c.is_hidden) || [];
   const hiddenComments = post.comments?.filter((c) => c.is_hidden) || [];
   const likeCount = post.likes?.[0]?.count || 0;
+  const isOwner = currentUser.id === post.profile_id;
+
+  useEffect(() => {
+    supabase
+      .from("likes")
+      .select("id")
+      .eq("post_id", post.id)
+      .eq("profile_id", currentUser.id)
+      .maybeSingle()
+      .then(({ data }) => setIsLiked(!!data));
+  }, [post.id, currentUser.id]);
+
+  const handleLike = () => {
+    setIsLiked((v) => !v);
+    toggleLike.mutate({ postId: post.id, isLiked });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
