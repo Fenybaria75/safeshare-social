@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Heart, MessageCircle, Shield, ShieldAlert, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Heart, MessageCircle, Shield, ShieldAlert, ChevronDown, ChevronUp, AlertTriangle, Trash2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { Post, Profile, Comment } from "@/types";
 import { useAddComment } from "@/hooks/useComments";
+import { useToggleLike, useDeletePost } from "@/hooks/useLikes";
+import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 
 interface PostCardProps {
@@ -17,11 +19,30 @@ export function PostCard({ post, currentUser }: PostCardProps) {
   const [commentText, setCommentText] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
   const addComment = useAddComment();
+  const toggleLike = useToggleLike();
+  const deletePost = useDeletePost();
 
   const visibleComments = post.comments?.filter((c) => !c.is_hidden) || [];
   const hiddenComments = post.comments?.filter((c) => c.is_hidden) || [];
   const likeCount = post.likes?.[0]?.count || 0;
+  const isOwner = currentUser.id === post.profile_id;
+
+  useEffect(() => {
+    supabase
+      .from("likes")
+      .select("id")
+      .eq("post_id", post.id)
+      .eq("profile_id", currentUser.id)
+      .maybeSingle()
+      .then(({ data }) => setIsLiked(!!data));
+  }, [post.id, currentUser.id]);
+
+  const handleLike = () => {
+    setIsLiked((v) => !v);
+    toggleLike.mutate({ postId: post.id, isLiked });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +63,24 @@ export function PostCard({ post, currentUser }: PostCardProps) {
             {post.profiles.username.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">{post.profiles.username}</p>
           <p className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
           </p>
         </div>
+        {isOwner && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            onClick={() => {
+              if (confirm("Delete this post?")) deletePost.mutate(post.id);
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Image */}
@@ -63,8 +96,8 @@ export function PostCard({ post, currentUser }: PostCardProps) {
       {/* Actions */}
       <div className="p-4 space-y-3">
         <div className="flex items-center gap-4">
-          <button className="hover:scale-110 transition-transform">
-            <Heart className="h-6 w-6 text-foreground hover:text-primary transition-colors" />
+          <button onClick={handleLike} className="hover:scale-110 transition-transform">
+            <Heart className={`h-6 w-6 transition-colors ${isLiked ? "fill-primary text-primary" : "text-foreground hover:text-primary"}`} />
           </button>
           <button
             className="hover:scale-110 transition-transform"

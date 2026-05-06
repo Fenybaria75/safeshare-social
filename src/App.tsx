@@ -9,6 +9,7 @@ import Moderation from "./pages/Moderation.tsx";
 import Profile from "./pages/Profile.tsx";
 import SearchPage from "./pages/SearchPage.tsx";
 import AiChat from "./pages/AiChat.tsx";
+import Reels from "./pages/Reels.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/ai-chat" element={<AiChat />} />
+          <Route path="/reels" element={<Reels />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
