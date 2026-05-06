@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Instagram, ShieldAlert, LogOut, Search, Sparkles, UserCircle } from "lucide-react";
+import { Instagram, ShieldAlert, LogOut, Search, Sparkles, UserCircle, Film } from "lucide-react";
 import { usePosts } from "@/hooks/usePosts";
 import { useProfiles } from "@/hooks/useProfiles";
 import { PostCard } from "@/components/PostCard";
@@ -49,6 +49,9 @@ const Index = () => {
             <CreatePostDialog />
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/search")}>
               <Search className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/reels")}>
+              <Film className="h-4 w-4" />
             </Button>
             <NavLink to="/ai-chat" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors bg-muted px-3 py-1.5 rounded-full">
               <Sparkles className="h-3.5 w-3.5" />
