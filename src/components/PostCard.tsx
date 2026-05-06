@@ -63,12 +63,24 @@ export function PostCard({ post, currentUser }: PostCardProps) {
             {post.profiles.username.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        <div>
+        <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">{post.profiles.username}</p>
           <p className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
           </p>
         </div>
+        {isOwner && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+            onClick={() => {
+              if (confirm("Delete this post?")) deletePost.mutate(post.id);
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Image */}
@@ -84,8 +96,8 @@ export function PostCard({ post, currentUser }: PostCardProps) {
       {/* Actions */}
       <div className="p-4 space-y-3">
         <div className="flex items-center gap-4">
-          <button className="hover:scale-110 transition-transform">
-            <Heart className="h-6 w-6 text-foreground hover:text-primary transition-colors" />
+          <button onClick={handleLike} className="hover:scale-110 transition-transform">
+            <Heart className={`h-6 w-6 transition-colors ${isLiked ? "fill-primary text-primary" : "text-foreground hover:text-primary"}`} />
           </button>
           <button
             className="hover:scale-110 transition-transform"
