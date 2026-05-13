@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Instagram, ShieldAlert, LogOut, Search, Sparkles, UserCircle, Film } from "lucide-react";
 import { usePosts } from "@/hooks/usePosts";
 import { useProfiles } from "@/hooks/useProfiles";
+import { useReels } from "@/hooks/useReels";
 import { PostCard } from "@/components/PostCard";
+import { ReelFeedCard } from "@/components/ReelFeedCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
@@ -13,6 +15,12 @@ import { CreatePostDialog } from "@/components/CreatePostDialog";
 const Index = () => {
   const { data: posts, isLoading: postsLoading } = usePosts();
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
+  const { data: reels, isLoading: reelsLoading } = useReels();
+
+  const feed = [
+    ...(posts || []).map((p: any) => ({ kind: "post" as const, item: p, created_at: p.created_at })),
+    ...(reels || []).map((r) => ({ kind: "reel" as const, item: r, created_at: r.created_at })),
+  ].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
   const { user, profile: currentUser, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -27,7 +35,7 @@ const Index = () => {
     navigate("/");
   };
 
-  const isLoading = postsLoading || profilesLoading || authLoading;
+  const isLoading = postsLoading || profilesLoading || reelsLoading || authLoading;
 
   if (authLoading) {
     return (
@@ -122,9 +130,11 @@ const Index = () => {
               </div>
             ))
           ) : (
-            posts?.map((post) =>
-              currentUser ? <PostCard key={post.id} post={post} currentUser={currentUser} /> : null
-            )
+            currentUser ? feed.map((entry) =>
+              entry.kind === "post"
+                ? <PostCard key={`p-${entry.item.id}`} post={entry.item} currentUser={currentUser} />
+                : <ReelFeedCard key={`r-${entry.item.id}`} reel={entry.item} currentUser={currentUser} />
+            ) : null
           )}
         </main>
       </div>
