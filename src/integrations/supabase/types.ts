@@ -21,8 +21,9 @@ export type Database = {
           hidden_reason: string | null
           id: string
           is_hidden: boolean
-          post_id: string
+          post_id: string | null
           profile_id: string
+          reel_id: string | null
         }
         Insert: {
           content: string
@@ -30,8 +31,9 @@ export type Database = {
           hidden_reason?: string | null
           id?: string
           is_hidden?: boolean
-          post_id: string
+          post_id?: string | null
           profile_id: string
+          reel_id?: string | null
         }
         Update: {
           content?: string
@@ -39,8 +41,9 @@ export type Database = {
           hidden_reason?: string | null
           id?: string
           is_hidden?: boolean
-          post_id?: string
+          post_id?: string | null
           profile_id?: string
+          reel_id?: string | null
         }
         Relationships: [
           {

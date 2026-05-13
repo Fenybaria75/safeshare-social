@@ -29,14 +29,16 @@ export function useAddComment() {
   return useMutation({
     mutationFn: async ({
       postId,
+      reelId,
       content,
     }: {
-      postId: string;
+      postId?: string;
+      reelId?: string;
       content: string;
     }) => {
-      // Get the authenticated user's ID server-side
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("You must be logged in to comment");
+      if (!postId && !reelId) throw new Error("Missing target");
 
       const modResult = await moderateComment(content);
 
@@ -47,7 +49,8 @@ export function useAddComment() {
       const { data, error } = await supabase
         .from("comments")
         .insert({
-          post_id: postId,
+          post_id: postId ?? null,
+          reel_id: reelId ?? null,
           profile_id: user.id,
           content,
           is_hidden: modResult.is_harmful,
@@ -62,6 +65,7 @@ export function useAddComment() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["reels"] });
       if (result.moderation.is_harmful) {
         toast.error("Comment hidden by AI moderation", {
           description: `${result.moderation.category}: ${result.moderation.reason}`,

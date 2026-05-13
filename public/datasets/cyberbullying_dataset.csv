@@ -1,0 +1,41 @@
+id,language,text,category,severity,is_harmful
+1,English,"You are amazing, keep up the great work!",non-toxic,none,false
+2,English,"Shut up you idiot, nobody likes you",cyberbullying,high,true
+3,English,"Loved your post, very inspiring",non-toxic,none,false
+4,English,"I will find you and hurt you",threat,high,true
+5,English,"You look so ugly in this photo lol",cyberbullying,medium,true
+6,English,"Great shot! What camera did you use?",non-toxic,none,false
+7,Hindi,"बहुत सुंदर तस्वीर है",non-toxic,none,false
+8,Hindi,"चुप रह बेवकूफ कहीं का",offensive,medium,true
+9,Hindi,"तू एकदम गधा है यार",cyberbullying,medium,true
+10,Hindi,"बहुत बढ़िया काम किया है आपने",non-toxic,none,false
+11,Marathi,"चूप बस तू, तुला काही कळत नाही",offensive,medium,true
+12,Marathi,"पाचट जोक होता हा एकदम",cyberbullying,medium,true
+13,Marathi,"खूप छान फोटो आहे",non-toxic,none,false
+14,Marathi,"गप बस मूर्खा कुठला",offensive,high,true
+15,Hinglish,"Bhai kya bakwas post hai yeh",offensive,medium,true
+16,Hinglish,"Tu toh bilkul nalayak hai bhai",cyberbullying,medium,true
+17,Hinglish,"Wow yaar, mast click hai",non-toxic,none,false
+18,Bengali,"তুমি একটা গাধা",offensive,medium,true
+19,Bengali,"খুব সুন্দর ছবি",non-toxic,none,false
+20,Tamil,"நீ ஒரு முட்டாள்",offensive,medium,true
+21,Tamil,"அருமையான படம்",non-toxic,none,false
+22,Telugu,"నువ్వు ఒక ఎదవ",offensive,high,true
+23,Telugu,"చాలా బాగుంది",non-toxic,none,false
+24,Gujarati,"તું બેવકૂફ છે",offensive,medium,true
+25,Gujarati,"ખુબ સરસ ફોટો",non-toxic,none,false
+26,English,"Kill yourself loser",threat,high,true
+27,English,"Your art is beautiful and unique",non-toxic,none,false
+28,English,"People like you should not exist",hate_speech,high,true
+29,English,"Congrats on your new job!",non-toxic,none,false
+30,English,"Go back to where you came from",hate_speech,high,true
+31,English,"f4g, you are useless",cyberbullying,high,true
+32,English,"s t u p i d post lol",offensive,medium,true
+33,English,"@$$hole get a life",offensive,medium,true
+34,Emoji,"Love it 😍❤️",non-toxic,none,false
+35,Emoji,"You disgust me 🤮🖕",offensive,high,true
+36,English,"You're a clown 🤡",cyberbullying,medium,true
+37,Hinglish,"Ekdum jhakaas yaar 🔥",non-toxic,none,false
+38,Marathi,"तू एकदम बेशरम आहेस",cyberbullying,medium,true
+39,Hindi,"मैं तुझे जान से मार दूंगा",threat,high,true
+40,English,"Have a nice day everyone!",non-toxic,none,false
