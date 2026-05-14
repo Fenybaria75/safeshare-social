@@ -1,0 +1,1 @@
+ALTER TABLE public.comments ADD CONSTRAINT comments_reel_id_fkey FOREIGN KEY (reel_id) REFERENCES public.reels(id) ON DELETE CASCADE;

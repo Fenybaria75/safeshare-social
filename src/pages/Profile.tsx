@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Grid3X3, Settings, Loader2 } from "lucide-react";
+import { ArrowLeft, Grid3X3, Settings, Loader2, Trash2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -222,6 +222,23 @@ const Profile = () => {
                     <span>❤️ {post.likes?.[0]?.count || 0}</span>
                     <span>💬 {post.comments?.length || 0}</span>
                   </div>
+                  {isOwnProfile && (
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1.5 right-1.5 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!confirm("Delete this post?")) return;
+                        const { error } = await supabase.from("posts").delete().eq("id", post.id);
+                        if (error) return toast.error(error.message);
+                        toast.success("Post deleted");
+                        setPosts((prev) => prev.filter((p) => p.id !== post.id));
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
