@@ -1,0 +1,3 @@
+ALTER TABLE public.reels ADD CONSTRAINT reels_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE public.reel_likes ADD CONSTRAINT reel_likes_reel_id_fkey FOREIGN KEY (reel_id) REFERENCES public.reels(id) ON DELETE CASCADE;
+ALTER TABLE public.reel_likes ADD CONSTRAINT reel_likes_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
